@@ -2,8 +2,8 @@ import axios from "axios";
 import { IRepository } from "../model/IRepository";
 import { IPr } from "../model/IPr";
 
-const { ORGANIZATION, PROJECT_ID } = import.meta.env;
-const AZURE_URL = `https://dev.azure.com/${ORGANIZATION}/${PROJECT_ID}`;
+const { VITE_ORGANIZATION, VITE_PROJECT_ID } = import.meta.env;
+export const AZURE_URL = `https://dev.azure.com/${VITE_ORGANIZATION}/${VITE_PROJECT_ID}`;
 
 interface IAzureResponse<T> {
   value: T;
@@ -41,7 +41,7 @@ export const getPrs = async (id: string) => {
   );
 
   const value = prs.data.value.filter(
-    (pr) => !pr.createdBy.displayName.includes(ORGANIZATION)
+    (pr) => !pr.createdBy.displayName.includes(VITE_ORGANIZATION)
   );
 
   return { value, count: value.length };
