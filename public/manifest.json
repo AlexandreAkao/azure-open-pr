@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Open PR",
+  "version": "1.0.0",
+  "description": "",
+  "action": {
+    "default_popup": "index.html"
+  },
+  "host_permissions": ["https://dev.azure.com/*"],
+  "permissions": ["storage", "debugger", "activeTab"],
+  "web_accessible_resources": [
+    {
+      "resources": ["images/*"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "icons": {
+    "16": "images/favicon-16x16.png",
+    "32": "images/favicon-32x32.png"
+  }
+}
