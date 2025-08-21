@@ -7,7 +7,7 @@
     "default_popup": "index.html"
   },
   "host_permissions": ["https://dev.azure.com/*"],
-  "permissions": ["storage", "debugger", "activeTab"],
+  "permissions": ["storage", "activeTab"],
   "web_accessible_resources": [
     {
       "resources": ["images/*"],
