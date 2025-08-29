@@ -28,14 +28,9 @@ const storage = <T,>(key: string, defaultValue: T) => {
 function App() {
   const [hasError, setHasError] = useState(false);
   const [repositories, setRepositories] = useState<IRepository[]>([]);
-  const [isOpen, setIsOpen] = useState(true);
-  const [
-    activeRepositories,
-    setActiveRepositories,
-    ,
-    ,
-    isInitialStateResolved,
-  ] = storage<string[]>("activeRepositories", [])();
+  const [isOpen, setIsOpen] = useState(false);
+  const [activeRepositories, setActiveRepositories, isInitialStateResolved] =
+    storage<string[]>("activeRepositories", [])();
   const [prs, setPrs] = useState<Prs[]>([]);
   const [search, setSearch] = useState("");
   const prsCount = prs.reduce((acc, pr) => acc + pr.data.length, 0);

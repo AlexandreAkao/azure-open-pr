@@ -30,11 +30,6 @@ export const PullRequestInfoContainer = styled.div`
   gap: 4px;
   justify-content: flex-start;
 
-  span {
-    display: inline-flex;
-    justify-content: center;
-  }
-
   span:first-child {
     font-weight: bold;
     color: #fafafa;

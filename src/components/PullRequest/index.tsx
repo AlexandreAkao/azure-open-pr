@@ -9,7 +9,8 @@ import {
   PullRequestReviewContainer,
 } from "./styled";
 import { IPr } from "../../model/IPr";
-import { getPullRequestUrl } from "../../utils/url";
+import { getPullRequestUrl, getTaskUrl } from "../../utils/url";
+import { useEffect, useState } from "react";
 
 type PullRequestProps = {
   imageUrl: string;
@@ -27,6 +28,9 @@ enum Status {
 }
 
 function PullRequest({ imageUrl, title, createdBy, data }: PullRequestProps) {
+  const [parsedTitle, setParsedTitle] = useState<string | React.ReactNode>(
+    title
+  );
   const getStatus = (status: number) => {
     if ([Status.Approved, Status.ApprovedWithSuggestions].includes(status)) {
       return <FaCircleCheck color="#55a362" />;
@@ -43,6 +47,42 @@ function PullRequest({ imageUrl, title, createdBy, data }: PullRequestProps) {
     return <></>;
   };
 
+  useEffect(() => {
+    const reg = /#{1}(?<id>\d+)/g;
+
+    const titleHasTask = title.matchAll(reg);
+    const parseTitle = title;
+    if (titleHasTask) {
+      const elements: (string | React.ReactNode)[] = [];
+      let lastIndex = 0;
+      for (const match of titleHasTask) {
+        if (match.index !== undefined && match.groups) {
+          const id = match.groups["id"];
+          if (lastIndex < match.index) {
+            elements.push(parseTitle.slice(lastIndex, match.index));
+          }
+
+          elements.push(
+            <a
+              href={getTaskUrl(id)}
+              target="_blank"
+              rel="noopener noreferrer"
+              key={id}
+            >
+              {match[0]}
+            </a>
+          );
+          lastIndex = match.index + match[0].length;
+        }
+      }
+      if (lastIndex < parseTitle.length) {
+        elements.push(parseTitle.slice(lastIndex));
+      }
+
+      setParsedTitle(elements);
+    }
+  }, [title]);
+
   return (
     <PullRequestContainer>
       <Tooltip id="tooltip" place="top" />
@@ -50,7 +90,7 @@ function PullRequest({ imageUrl, title, createdBy, data }: PullRequestProps) {
         <img src={imageUrl} alt="user image" className="user-image" />
       </a>
       <PullRequestInfoContainer>
-        <span>{title}</span>
+        <span>{parsedTitle}</span>
         <span>
           {data.sourceRefName} -&gt; {data.targetRefName}
         </span>
