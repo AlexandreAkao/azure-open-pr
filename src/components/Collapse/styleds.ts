@@ -3,7 +3,7 @@ import styled from "styled-components";
 export const CollapseContainer = styled.div`
   border: 1px solid #ccc;
   margin: 10px;
-  width: 400px;
+  width: 100%;
   display: flex;
   flex-direction: column;
 
