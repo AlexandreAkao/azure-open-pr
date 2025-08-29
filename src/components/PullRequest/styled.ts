@@ -17,6 +17,10 @@ export const PullRequestContainer = styled.div`
     height: 44px;
     border-radius: 50%;
   }
+
+  .user-image {
+    border: 2px solid #fafafa;
+  }
 `;
 
 export const PullRequestInfoContainer = styled.div`
@@ -28,15 +32,17 @@ export const PullRequestInfoContainer = styled.div`
 
   span {
     display: inline-flex;
+    justify-content: center;
   }
 
   span:first-child {
     font-weight: bold;
+    color: #fafafa;
   }
 
   span:last-child {
     font-size: 0.8rem;
-    color: #797979;
+    color: #afafafff;
   }
 `;
 

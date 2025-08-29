@@ -106,6 +106,7 @@ function App() {
           boxShadow: "0 4px 32px 0 #0008",
           padding: 40,
           border: "1.5px solid #333a4d",
+          width: 600,
         }}
       >
         <h1

@@ -47,7 +47,7 @@ function PullRequest({ imageUrl, title, createdBy, data }: PullRequestProps) {
     <PullRequestContainer>
       <Tooltip id="tooltip" place="top" />
       <a data-tooltip-id="tooltip" data-tooltip-content={createdBy}>
-        <img src={imageUrl} alt="user image" />
+        <img src={imageUrl} alt="user image" className="user-image" />
       </a>
       <PullRequestInfoContainer>
         <span>{title}</span>
