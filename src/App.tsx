@@ -1,14 +1,18 @@
-import { useEffect, useState } from "react";
-import { getPrs, getRepositories } from "./service/api";
+import { useCallback, useEffect, useState } from "react";
+import { createApi } from "./service/api";
+import { useConfig } from "./context/useConfig";
 import { useChromeStorageLocal } from "use-chrome-storage";
 import Collapse from "./components/Collapse";
 import Repository from "./components/Repository";
+import Settings from "./components/Settings";
 import { IRepository } from "./model/IRepository";
 import { IPr } from "./model/IPr";
 import PullRequest from "./components/PullRequest";
 import { SearchInput } from "./styled";
-import "./App.css";
 import { setTextBadge } from "./utils/chromeExtension";
+import useTimeout from "./hooks/useTimeout";
+
+import "./App.css";
 
 type Prs = {
   title: string;
@@ -26,50 +30,72 @@ const storage = <T,>(key: string, defaultValue: T) => {
 };
 
 function App() {
+  const [activeRepositories, setActiveRepositories, isInitialStateResolved] =
+    storage<string[]>("activeRepositories", [])();
+
   const [hasError, setHasError] = useState(false);
   const [repositories, setRepositories] = useState<IRepository[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [activeRepositories, setActiveRepositories, isInitialStateResolved] =
-    storage<string[]>("activeRepositories", [])();
   const [prs, setPrs] = useState<Prs[]>([]);
   const [search, setSearch] = useState("");
-  const prsCount = prs.reduce((acc, pr) => acc + pr.data.length, 0);
-  setTextBadge(prsCount.toString());
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [prsCount, setPrsCount] = useState(() =>
+    prs.reduce((acc, pr) => acc + pr.data.length, 0)
+  );
+
+  const { organization, projectName } = useConfig();
+
+  const fetchRepositories = useCallback(async () => {
+    try {
+      const api = createApi({ organization, projectName });
+      const repoData = await api.getRepositories();
+      setRepositories(repoData.value);
+      setHasError(false);
+    } catch (error) {
+      setHasError(true);
+      console.log(error);
+    }
+  }, [organization, projectName]);
+
+  const fetchPrs = useCallback(async () => {
+    if (!isInitialStateResolved) return;
+
+    setPrs([]);
+    const prDatas: Prs[] = [];
+
+    const api = createApi({ organization, projectName });
+    await Promise.all(
+      activeRepositories.map(async (id) => {
+        const pr = await api.getPrs(id);
+        if (pr.count > 0) {
+          const prData: Prs = {
+            title: pr.value[0].repository.name,
+            data: pr.value,
+          };
+          prDatas.push(prData);
+        }
+      })
+    );
+    const count = prDatas.reduce((acc, pr) => acc + pr.data.length, 0);
+
+    console.log({ prDatas, count });
+    setPrsCount(count);
+    setPrs(prDatas);
+
+    const badgeText = count > 0 ? count.toString() : "";
+    setTextBadge(badgeText);
+  }, [activeRepositories, organization, projectName, isInitialStateResolved]);
+
+  useTimeout(fetchRepositories, 30000);
+  useTimeout(fetchPrs, 30000);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const repoData = await getRepositories();
-        setRepositories(repoData.value);
-        setHasError(false);
-      } catch (error) {
-        setHasError(true);
-        console.log(error);
-      }
-    })();
-  }, []);
+    fetchRepositories();
+  }, [fetchRepositories]);
 
   useEffect(() => {
-    (async () => {
-      setPrs([]);
-      const prDatas: Prs[] = [];
-
-      await Promise.all(
-        activeRepositories.map(async (id) => {
-          const pr = await getPrs(id);
-          if (pr.count > 0) {
-            const prData: Prs = {
-              title: pr.value[0].repository.name,
-              data: pr.value,
-            };
-            prDatas.push(prData);
-          }
-        })
-      );
-
-      setPrs(prDatas);
-    })();
-  }, [activeRepositories, isInitialStateResolved]);
+    fetchPrs();
+  }, [fetchPrs]);
 
   const handleAddOrRemoveActive = (id: string) => {
     if (activeRepositories.includes(id)) {
@@ -84,26 +110,8 @@ function App() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #232526 0%, #414345 100%)",
-        fontFamily: "'Segoe UI', Arial, sans-serif",
-        padding: 32,
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 760,
-          margin: "0 auto",
-          background: "#23272f",
-          borderRadius: 18,
-          boxShadow: "0 4px 32px 0 #0008",
-          padding: 40,
-          border: "1.5px solid #333a4d",
-          width: 600,
-        }}
-      >
+    <div className="app-shell">
+      <div className="card-centered">
         <h1
           style={{
             fontWeight: 800,
@@ -116,9 +124,31 @@ function App() {
         >
           Azure Open PRs
         </h1>
-        <p style={{ color: "#b0bec5", marginBottom: 28, fontSize: 18 }}>
-          Visualize e acompanhe Pull Requests dos seus repositórios.
-        </p>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 12,
+          }}
+        >
+          <p style={{ color: "#b0bec5", marginBottom: 28, fontSize: 18 }}>
+            Visualize e acompanhe Pull Requests dos seus repositórios.
+          </p>
+          <div>
+            <button
+              onClick={() => setIsSettingsOpen(true)}
+              className="btn"
+              style={{
+                background: "#17202a",
+                color: "#bdddff",
+                border: "1px solid #334",
+              }}
+            >
+              Configurações
+            </button>
+          </div>
+        </div>
 
         {hasError && (
           <div
@@ -284,6 +314,10 @@ function App() {
           </div>
         </div>
       </div>
+      <Settings
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
     </div>
   );
 }
